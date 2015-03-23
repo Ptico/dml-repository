@@ -17,7 +17,7 @@ module Dml
         #  - {Entity}   if record found
         #
         def fetch(id)
-          _fetch
+          _fetch(id)
         end
         alias_method :[], :fetch
 
@@ -55,7 +55,7 @@ module Dml
         # Returns: {Integer} count of deleted entities
         #
         def destroy(records)
-          _destroy
+          _destroy(records)
         end
         alias_method :delete, :destroy
 
@@ -68,7 +68,37 @@ module Dml
         # Returns: {Collection}
         #
         def wrap(array_or_dataset)
-          collection.new(array_or_dataset, entity)
+          collection_class.new(array_or_dataset, entity)
+        end
+
+        ##
+        # Get entity class
+        #
+        def entity_class
+          @entity
+        end
+
+        ##
+        # Get collection class
+        #
+        def collection_class
+          @collection || default_collection
+        end
+
+        ##
+        # Get relation name
+        #
+        def relation_name
+          @relation
+        end
+
+        ##
+        # Get primary key names
+        #
+        # Returns: {Array} of primary keys or empty array
+        #
+        def pk
+          @primary_key || []
         end
 
       protected
@@ -76,25 +106,29 @@ module Dml
         ##
         # Set entity class
         #
-        def entity
+        def entity(klass)
+          @entity = klass
         end
 
         ##
         # Set collection class
         #
-        def collection
+        def collection(klass)
+          @collection = klass
         end
 
         ##
         # Set relation name
         #
-        def relation
+        def relation(name)
+          @relation = name.to_sym
         end
 
         ##
         # Set primary key
         #
-        def primary_key
+        def primary_key(*names)
+          @primary_key = Array(names).flatten
         end
 
         ##
@@ -114,6 +148,10 @@ module Dml
         end
 
       private
+
+        def default_collection
+          defined?(Dml::Collection) ? Dml::Collection : nil
+        end
 
         ##
         # Private Abstract: fetch implementation
