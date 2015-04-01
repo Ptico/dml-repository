@@ -156,22 +156,102 @@ RSpec.describe Dml::Repository::Base do
   end
 
   describe '.wrap' do
+    subject do
+      repo.wrap(array_or_dataset)
+    end
+
     context 'when collection class defined' do
-      xit 'instantiates collection class'
+      context 'when entity set' do
+        let(:entity)           { Struct.new(:id, :name) }
+        let(:collection)       { Class.new(Struct.new(:collection, :entity)) }
+        let(:array_or_dataset) { [entity.new(1, 'Test1'), entity.new(2, 'Test2')] }
+
+        let(:repo) do
+          collection_class = collection
+          entity_class     = entity
+
+          Class.new(described_class) do
+            entity(entity_class)
+            collection(collection_class)
+          end
+        end
+
+        it 'instantiates collection class' do
+          expect(subject.class).to eql(collection)
+        end
+      end
+
+      context 'when entity not set' do
+        let(:collection)       { Class.new(Struct.new(:collection, :entity)) }
+        let(:array_or_dataset) { ['Test1', 'Test2'] }
+
+        let(:repo) do
+          collection_class = collection
+
+          Class.new(described_class) do
+            collection(collection_class)
+          end
+        end
+
+        it 'instantiates collection class' do
+          expect(subject.class).to eql(collection)
+        end
+      end
     end
 
     context 'when collection class not defined' do
       context 'when default_collection exists' do
-        xit 'intantiates default collection class'
+        let(:entity)           { Struct.new(:id, :name) }
+        let(:array_or_dataset) { [entity.new(1, 'Test1'), entity.new(2, 'Test2')] }
+
+        let(:repo) do
+          entity_class = entity
+
+          Class.new(described_class) do
+            entity(entity_class)
+          end
+        end
+
+        before(:each) do
+          class Dml::Collection
+            def initialize(array_or_dataset, entity); end
+          end
+        end
+
+        after(:each) { Dml.send(:remove_const, 'Collection') }
+
+        it 'intantiates default collection class' do
+          expect(subject.class).to eql(Dml::Collection)
+        end
       end
 
       context 'when default_collection is nil' do
+        let(:array_or_dataset) { ['hello', 'world'] }
+
         context 'when entity set' do
-          xit 'iterates over collection and wraps with entity'
+          let(:entity) { Struct.new(:entity) }
+
+          let(:repo) do
+            entity_class = entity
+
+            Class.new(described_class) do
+              entity(entity_class)
+            end
+          end
+
+          it 'iterates over collection and wraps with entity' do
+            expect(subject.first.class).to eql(entity)
+          end
         end
 
         context 'when entity not set' do
-          xit 'just returns collection as it is'
+          let(:repo) do
+            Class.new(described_class)
+          end
+
+          it 'just returns collection as it is' do
+            expect(subject).to eql(array_or_dataset)
+          end
         end
       end
     end

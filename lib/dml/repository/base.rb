@@ -68,7 +68,13 @@ module Dml
         # Returns: {Collection}
         #
         def wrap(array_or_dataset)
-          collection_class.new(array_or_dataset, entity)
+          if collection_class
+            collection_class.new(array_or_dataset, @entity)
+          elsif @entity
+            array_or_dataset.map { |item| @entity.new(item) }
+          else
+            array_or_dataset
+          end
         end
 
         ##

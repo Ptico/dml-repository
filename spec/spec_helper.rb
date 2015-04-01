@@ -1,4 +1,5 @@
 require 'dml/repository'
+require 'pry'
 
 Dir[File.join(Dir.pwd, 'spec/shared_examples/**/*.rb')].each { |f| require f }
 
