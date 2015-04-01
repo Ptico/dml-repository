@@ -161,22 +161,41 @@ RSpec.describe Dml::Repository::Base do
     end
 
     context 'when collection class defined' do
-      let(:entity)           { Struct.new(:id, :name) }
-      let(:collection)       { Class.new(Struct.new(:collection, :entity)) }
-      let(:array_or_dataset) { [entity.new(1, 'Test1'), entity.new(2, 'Test2')] }
+      context 'when entity set' do
+        let(:entity)           { Struct.new(:id, :name) }
+        let(:collection)       { Class.new(Struct.new(:collection, :entity)) }
+        let(:array_or_dataset) { [entity.new(1, 'Test1'), entity.new(2, 'Test2')] }
 
-      let(:repo) do
-        collection_class = collection
-        entity_class     = entity
+        let(:repo) do
+          collection_class = collection
+          entity_class     = entity
 
-        Class.new(described_class) do
-          entity(entity_class)
-          collection(collection_class)
+          Class.new(described_class) do
+            entity(entity_class)
+            collection(collection_class)
+          end
+        end
+
+        it 'instantiates collection class' do
+          expect(subject.class).to eql(collection)
         end
       end
 
-      it 'instantiates collection class' do
-        expect(subject.class).to eql(collection)
+      context 'when entity not set' do
+        let(:collection)       { Class.new(Struct.new(:collection, :entity)) }
+        let(:array_or_dataset) { ['Test1', 'Test2'] }
+
+        let(:repo) do
+          collection_class = collection
+
+          Class.new(described_class) do
+            collection(collection_class)
+          end
+        end
+
+        it 'instantiates collection class' do
+          expect(subject.class).to eql(collection)
+        end
       end
     end
 
