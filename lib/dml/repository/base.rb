@@ -1,3 +1,5 @@
+require 'dml/repository/dummy/collection'
+
 module Dml
   module Repository
     ##
@@ -10,14 +12,14 @@ module Dml
         # Static: get entity by primary key
         #
         # Params:
-        # - id {String|Integer} primary key
+        # - key {String|Integer} primary key
         #
         # Returns:
         #  - {NilClass} nil if record is not found
         #  - {Entity}   if record found
         #
-        def fetch(id)
-          _fetch(id)
+        def fetch(key)
+          _fetch(key)
         end
         alias_method :[], :fetch
 
@@ -106,12 +108,69 @@ module Dml
         ##
         # Set entity class
         #
+        # Entity constructor must accept
+        # a hash with attributes
+        #
+        # Example:
+        #
+        #     class User
+        #       attr_accessor :id, :name
+        #
+        #       def initialize(attrs)
+        #         @id, @name = attrs.values_at(:id, :name)
+        #       end
+        #     end
+        #
+        #     class UsersRepository
+        #       entity User
+        #     end
+        #
+        # Params:
+        # - klass {Class} entity class
+        #
         def entity(klass)
           @entity = klass
         end
 
         ##
         # Set collection class
+        #
+        # Collection class is responsible for converting
+        # a collection of hashes to collection of entities
+        # this allows us to create lazy collections.
+        #
+        # Collection constructor must accept an array or set
+        # of hashes with attributes as a first param and entity
+        # class as second param
+        #
+        # Example:
+        #
+        #     class User
+        #       attr_accessor :id, :name
+        #
+        #       def initialize(attrs)
+        #         @id, @name = attrs.values_at(:id, :name)
+        #       end
+        #     end
+        #
+        #     class Collection
+        #       include Enumerable
+        #       def initialize(collection, entity)
+        #         @collection = collection.map { |attrs| Entity.new(attrs) }
+        #       end
+        #       def each(&block); @collection.each(&block); end
+        #     end
+        #
+        #     Collection.new([{ id: 1, name: 'John' }], User)
+        #     # => [#<User @id=1, @name="John">]
+        #
+        #     class UsersRepository
+        #       entity User
+        #       collection Collection
+        #     end
+        #
+        # Params:
+        # - klass {Class} collection class
         #
         def collection(klass)
           @collection = klass
@@ -131,6 +190,8 @@ module Dml
           @primary_key = Array(names).flatten
         end
 
+      private
+
         ##
         # Private Static: make complex query for repositories
         #
@@ -147,10 +208,8 @@ module Dml
         def query(name, options={}, &block)
         end
 
-      private
-
         def default_collection
-          defined?(Dml::Collection) ? Dml::Collection : nil
+          defined?(Dml::Collection) ? Dml::Collection : Dml::Repository::Dummy::Collection
         end
 
         ##

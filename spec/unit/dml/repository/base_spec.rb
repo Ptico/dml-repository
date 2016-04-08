@@ -64,8 +64,8 @@ RSpec.describe Dml::Repository::Base do
       end
 
       context 'when Dml::Collection not defined' do
-        it 'returns nil' do
-          expect(subject).to be(nil)
+        it 'returns dummy collection' do
+          expect(subject).to be(Dml::Repository::Dummy::Collection)
         end
       end
     end
