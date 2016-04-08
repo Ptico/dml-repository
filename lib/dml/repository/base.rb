@@ -209,7 +209,7 @@ module Dml
         end
 
         def default_collection
-          defined?(Dml::Collection) ? Dml::Collection : Dml::Repository::Dummy::Collection
+          defined?(Dml::Collection) ? Dml::Collection : Dummy::Collection
         end
 
         ##
